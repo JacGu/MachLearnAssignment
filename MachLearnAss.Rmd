@@ -1,0 +1,110 @@
+---
+title: "Machine Learning Assignment"
+author: "JAGU"
+date: "7 mei 2017"
+output: html_document
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+```
+#SYNOPSIS.
+##6 participants with accelerometers on belt, forearm, arm, and a dumb-bell. They were asked to perform barbell lifts correctly and incorrectly, in 5 different ways. People regularly quantify how much of a particular activity they do, but they rarely quantify how well they do it. Given a dataset with dimension 19622X160 and the -classe- variable with the classifications A,B,C,D and E. Goal is to predict the classifications of how well the exercises were performed by the 6 participants.
+
+###MODEL ASSESSMENT.
+####2 main requirements for a model are needed. Perform  classification and capable of handling NA values. There are a number of algoritms that can handle NA-values. All working with na.omit. For now I only know randomForest can work with na.roughfix and rpart with na.rpart. RandomForest however can not handle large factor variables. Na.omit can be used with not to many NA's. As can be seen below from the 19622 observations only 406 observations are left free of NA's. 
+```{r cache=TRUE, echo=TRUE}
+library(rpart);library(stringr)
+pml=read.csv("pml-training.csv",header=TRUE)
+dim(pml)
+pmlClean=na.omit(pml); dim(pmlClean) 
+```
+
+####Rpart with na.rpart is the only algorithm that can work on any subset of the original data, without preprocessing. A random subset of 1000 observation is taken as the Probe set, from the original training set of 19622 observations.
+
+```{r cache=TRUE, echo=TRUE}
+set.seed(200)
+train=sample(nrow(pml),1000)
+training=pml[train,]
+```
+
+####Fitting rpart on the training set. Rpart uses default 10-Fold Cross Validation.The number of folds can be changed in the -xval- parameter. 
+```{r cache=TRUE, echo=TRUE}
+set.seed(200)
+fitRpart<-rpart(classe ~.,data=training,na.action=na.rpart)
+```
+###CV, 10-Fold Cross Validation. I.e. 9 times trained on 9 equel parts of the Probe set, with 9 times validation on the 10the remaining part of the Probe set. In-sample error is the error rate on the training-set, which is always overfitted and ultimately goes to zero. Out-of-sample error is the error rate on a independent test-set, which is the true error. For simulated data the Expected Out-Of-Sample error is; mean(predicted.values!=true.values). Missclassified observations or the error are presented by means of the confusion matrix. An often used quick evaluation is;  accuracy=wellpredicted/n = mean(predicted.values==true.values)
+
+####For prediction the pml-testing data are read into R and used for prediction.
+```{r cache=TRUE, echo=TRUE}
+pmlTest<-read.csv("pml-testing.csv",header=TRUE)
+#predTest<-predict(fitRpart,pmlTest)
+```
+
+####This gives an error. A dataframe is stored on disk as a file, a character string. Where observations are lines and variables are fields of a line. By importing in R, the file is converted to a dataframe, and a class is assigned to the character fields. Due to the values in those fields, these classes can be different from the original classes. Read.csv put also double quotes on factor variables, which has to be removed for prediction. The names too are changed, get a prefix, and have to be converted back to the original. This and that can be seen here.
+```{r cache=TRUE,echo=TRUE}
+pmlTest<-read.csv("pml-testing.csv",header=TRUE,quote=NULL)
+str(pmlTest[1:6,1:8])
+```
+
+####Removing these quotes from factor variables.
+
+```{r cache=TRUE, echo=TRUE}
+for(i in 1: ncol(pmlTest)){
+  if(class(pmlTest[,i])=="factor"){
+    pmlTest[,i]<-str_replace_all(pmlTest[,i],"\"","");
+    pmlTest[,i]<-as.factor(pmlTest[,i])}
+}
+str(pmlTest[1:5,1:8])
+```
+####Assign the same classes and names to the test-set as in the Probe training set.
+```{r cache=TRUE,echo=TRUE}
+names(pmlTest)<-names(training)
+for(i in 1:ncol(pmlTest)){class(pmlTest[,i])<-class(training[,i])}
+str(pmlTest[1:6,1:12]);str(training[1:6,1:12])
+```
+
+####Training- and test-set are now identical and can be predicted.
+```{r cache=TRUE, echo=TRUE}
+fitRpart<-rpart(classe ~.,training,na.action=na.rpart)
+predRpart=predict(fitRpart,pmlTest)
+```
+####Convert the predictions to the classifications A,B,C,D and E.
+```{r cache=TRUE,echo=TRUE}
+predRpart<-as.data.frame(predRpart)
+wb<-which(predRpart$B==1) #wb= which indices with a B reading.
+predRpart[wb,"B"]=2
+wc<-which(predRpart$C==1)
+predRpart[wc,"C"]=3
+wd<-which(predRpart$D==1)
+predRpart[wd,"D"]=4
+we<-which(predRpart$E==1)
+predRpart[we,"E"]=5
+#Make 1-dim Resultvector with classifications
+result<-vector()
+p<-predRpart
+for (i in 1: nrow(p)){
+   if (sum(p[i,])==1){result[i]<-"A"}
+   if (sum(p[i,])==2){result[i]<-"B"}
+   if (sum(p[i,])==3){result[i]<-"C"}
+   if (sum(p[i,])==4){result[i]<-"D"}
+   if (sum(p[i,])==5){result[i]<-"E"}
+}
+```
+####The predicted Result is;
+```{r cache=TRUE,echo=TRUE}
+print(result)
+```
+###Model Selection.
+####On a simulation test-set, the Expected-Out-Of-Sample-Error = mean(result!=testing$classe)=0=0%. Then accuracy=(1-0)=1=100%. I tested this a few times. For the independent 20 test samples, I expect this close to the simulation or not to be different. So too this model does not need to be improved or fine tuned. Following some plots from the Rpart package. The complexity parameter, Cp. Every value that Cp takes for a split, it must improve R-squared, or the fit. Otherwise the split is pruned off.
+```{r cache=TRUE, echo=TRUE}
+par(mfrow=c(2,2))
+plot(fitRpart);text(fitRpart)
+plotcp(fitRpart, minline = TRUE, lty = 3, col = 1, upper = c("size", "splits", "none"))
+rsq.rpart(fitRpart)
+```
+
+
+
+
+
