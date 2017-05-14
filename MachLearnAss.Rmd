@@ -9,10 +9,11 @@ output: html_document
 knitr::opts_chunk$set(echo = TRUE)
 ```
 #SYNOPSIS.
-##6 participants with accelerometers on belt, forearm, arm, and a dumb-bell. They were asked to perform barbell lifts correctly and incorrectly, in 5 different ways. People regularly quantify how much of a particular activity they do, but they rarely quantify how well they do it. Given a dataset with dimension 19622X160 and the -classe- variable with the classifications A,B,C,D and E. Goal is to predict the classifications of how well the exercises were performed by the 6 participants.
+##6 participants with accelerometers on belt, forearm, arm, and a dumb-bell. They were asked to perform barbell lifts correctly and incorrectly, in 5 different ways. People regularly quantify how much of a particular activity they do, but they rarely quantify how well they do it. Given a dataset with dimension 19622X160 and the -classe- variable with the classifications A,B,C,D and E. Goal is to predict the classifications of how well the exercises were performed by the 6 participants.Data was available on:http://groupware.les.inf.puc-rio.br/har 
+
 
 ###MODEL ASSESSMENT.
-####2 main requirements for a model are needed. Perform  classification and capable of handling NA values. There are a number of algoritms that can handle NA-values. All working with na.omit. For now I only know randomForest can work with na.roughfix and rpart with na.rpart. RandomForest however can not handle large factor variables. Na.omit can be used with not to many NA's. As can be seen below from the 19622 observations only 406 observations are left free of NA's. 
+####2 main requirements for the model are needed. It should perform  classification and capable of handling NA values. There are a number of algoritms that can handle NA-values. All working with na.omit. For now I only know randomForest can work with na.roughfix and rpart with na.rpart. RandomForest however can not handle large factor variables. Na.omit can be used with not to many NA's. As can be seen below from the 19622 observations only 406 observations are left free of NA's. 
 ```{r cache=TRUE, echo=TRUE}
 library(rpart);library(stringr)
 pml=read.csv("pml-training.csv",header=TRUE)
