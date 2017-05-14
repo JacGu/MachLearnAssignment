@@ -142,7 +142,10 @@ dim(pml)</code></pre>
 <h4>Rpart with na.rpart is the only algorithm that can work on any subset of the original data, without preprocessing. A random subset of 1000 observation is taken as the Probe set, from the original training set of 19622 observations.</h4>
 <pre class="r"><code>set.seed(200)
 train=sample(nrow(pml),1000)
-training=pml[train,]</code></pre>
+training=pml[train,]
+set.seed(93931)
+train1=sample(nrow(pml),20)
+testing=pml[train1,]</code></pre>
 </div>
 <div id="fitting-rpart-on-the-training-set.-rpart-uses-default-10-fold-cross-validation.the-number-of-folds-can-be-changed-in-the--xval--parameter." class="section level4">
 <h4>Fitting rpart on the training set. Rpart uses default 10-Fold Cross Validation.The number of folds can be changed in the -xval- parameter.</h4>
