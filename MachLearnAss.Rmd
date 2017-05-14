@@ -27,6 +27,9 @@ pmlClean=na.omit(pml); dim(pmlClean)
 set.seed(200)
 train=sample(nrow(pml),1000)
 training=pml[train,]
+set.seed(93931)
+train1=sample(nrow(pml),20)
+testing=pml[train1,]
 ```
 
 ####Fitting rpart on the training set. Rpart uses default 10-Fold Cross Validation.The number of folds can be changed in the -xval- parameter. 
